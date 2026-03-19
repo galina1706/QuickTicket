@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickTicket - Система бронювання v1.0.4</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .movie-select { margin: 20px 0; }
+        .screen { width: 80%; height: 30px; background: #555; margin: 20px auto; color: white; text-align: center; line-height: 30px; border-radius: 5px; font-size: 12px; }
+        .seats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 20px 0; }
+        .seat { height: 40px; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 5px; }
+        .seat.selected { background-color: #4CAF50; color: white; border-color: #388E3C; }
+        .seat.occupied { background-color: #ddd; color: #999; cursor: not-allowed; }
+        .booking-form { background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .total-price { font-size: 1.5em; font-weight: bold; color: #E91E63; margin: 20px 0; }
+        button { background: #2196F3; color: white; padding: 15px; border: none; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; }
+        button:hover { background: #1976D2; }
+        #status-msg { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🎬 QuickTicket Beta</h1>
+    <p>Забронюйте квитки на найкращі прем'єри за секунди!</p>
+</div>
+
+<div class="movie-select">
+    <label for="movie">Оберіть фільм:</label>
+    <select id="movie" onchange="updatePrice()">
+        <option value="150">Бетмен: Початок (150 грн)</option>
+        <option value="200">Дюна: Частина 2 (200 грн)</option>
+        <option value="120">Ретро-показ: Термінатор (120 грн)</option>
+    </select>
+</div>
+
+<div class="screen">ЕКРАН</div>
+<div class="seats-grid" id="seatsGrid"></div>
+
+<div class="booking-form">
+    <div class="input-group">
+        <label>Промокод:</label>
+        <input type="text" id="promoCode" placeholder="Введіть код для знижки" oninput="updatePrice()">
+    </div>
+    <div class="input-group">
+        <label>Ваш Email (для отримання квитків):</label>
+        <input type="text" id="email" placeholder="name@domain.com">
+    </div>
+    <div class="total-price" id="totalDisplay">До сплати: 0 грн</div>
+    <button onclick="submitBooking()">Підтвердити замовлення</button>
+    <div id="status-msg"></div>
+</div>
+
+<script>
+    const grid = document.getElementById('seatsGrid');
+    const seatsCount = 24;
+    let selectedSeats = [];
+
+    // Генерація місць
+    for (let i = 1; i <= seatsCount; i++) {
+        const seat = document.createElement('div');
+        seat.className = 'seat';
+        seat.innerText = i;
+
+        // БАГ №1: Місце №7 візуально зайняте, але клікабельне
+        if (i === 7) seat.classList.add('occupied');
+
+        seat.onclick = function() {
+            // БАГ №2: Місце №13 неможливо обрати (нічого не відбувається)
+            if (i === 13) return;
+
+            this.classList.toggle('selected');
+            updatePrice();
+        };
+        grid.appendChild(seat);
+    }
+
+    function updatePrice() {
+        const moviePrice = parseInt(document.getElementById('movie').value);
+        const selected = document.querySelectorAll('.seat.selected').length;
+        let total = moviePrice * selected;
+
+        // БАГ №3: Промокод STUDENT2026 замість знижки 20% додає 2000 грн до суми
+        const promo = document.getElementById('promoCode').value;
+        if (promo === 'STUDENT2026') {
+            total += 2000;
+        }
+
+        document.getElementById('totalDisplay').innerText = `До сплати: ${total} грн`;
+    }
+
+    function submitBooking() {
+        const email = document.getElementById('email').value;
+        const selectedCount = document.querySelectorAll('.seat.selected').length;
+        const msg = document.getElementById('status-msg');
+
+        // БАГ №4: Відсутня валідація на порожні місця (можна забронювати 0 квитків)
+        // БАГ №5: Відсутня валідація формату Email (приймає будь-який текст)
+
+        msg.style.display = 'block';
+        msg.style.backgroundColor = '#d4edda';
+        msg.style.color = '#155724';
+        msg.innerText = `Успіх! ${selectedCount} квитків заброньовано для ${email}. Очікуйте лист!`;
+    }
+</script>
+
+</body>
+</html>
